@@ -1,23 +1,64 @@
 import React, {Component} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text, View, Alert} from 'react-native';
 import params from './src/params';
-import Field from './src/components/Field';
-
+import MineField from './src/components/MineField';
+import {
+  createMinedBoard,
+  cloneBoard,
+  openField,
+  hadExplosion,
+  wonGame,
+  showMines,
+} from './src/functions';
 export default class App extends Component {
+  constructor(props) {
+    console.warn('AQUIII');
+    console.log('AQUIII');
+    super(props);
+    this.state = this.createState();
+  }
+
+  minesAmount = () => {
+    const cols = params.getColumnsAmount();
+    const rows = params.getRowsAmount();
+    return Math.ceil(cols * rows * params.difficultLevel);
+  };
+
+  createState = () => {
+    const cols = params.getColumnsAmount();
+    const rows = params.getRowsAmount();
+    console.log(this.minesAmount());
+    return {
+      board: createMinedBoard(rows, cols, 3),
+      won: false,
+      lost: false,
+    };
+  };
+
+  onOpenField = (row, column) => {
+    const board = cloneBoard(this.state.board);
+    openField(board, row, column);
+    const lost = hadExplosion(board);
+    const won = wonGame(board);
+
+    if (lost) {
+      showMines(board);
+      Alert.alert('Perdeu!');
+    }
+
+    if (won) {
+      Alert.alert('Parabéns!', 'Você venceu!');
+    }
+
+    this.setState({board, lost, won});
+  };
+
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>Iniciando o Mines!</Text>
-        <Text style={styles.instructions}>
-          Tamanho da grade:
-          {params.getRowsAmount()}x{params.getColumnsAmount()}
-        </Text>
-        <Field />
-        <Field opened />
-        <Field opened nearMines={1} />
-        <Field opened nearMines={2} />
-        <Field opened nearMines={3} />
-        <Field opened nearMines={6} />
+        <View style={styles.board}>
+          <MineField board={this.state.board} onOpenField={this.onOpenField} />
+        </View>
       </View>
     );
   }
@@ -26,8 +67,10 @@ export default class App extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+  },
+  board: {
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#AAA',
   },
 });
